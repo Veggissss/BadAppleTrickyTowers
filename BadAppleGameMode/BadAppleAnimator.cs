@@ -9,6 +9,7 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
     private Brick _parentBrick;
     private Brick _currentBrick;
     private LocalGamePlayController _gamePlayController;
+    private int x = 0;
 
     public void SetBrick(Brick brick)
     {
@@ -38,7 +39,7 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         {
             return;
         }
-        if (time - _animationTime >= 1)
+        if (time - _animationTime >= 1f)
         {
             _animationTime = time;
             if (_tower.GetLastBrick() == null)
@@ -53,22 +54,21 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
 
             // Get the new currentBrick available.
             _gamePlayController.Inject(this);
+            // BRICK_T, BRICK_L BRICK_J, BRICK_O, BRICK_I, BRICK_S, BRICK_Z | O is 2x2 solid.
+            // Grid size = 35 + 1 + 35
+            Debug.Log(_currentBrick.resourceId);
             _tower.AddTowerPart(_currentBrick);
-
-            int i = 0;
-            foreach (TowerPart tp in _tower.towerParts)
-            {
-                i++;
-                if (tp is Brick brick)
-                {
-                    Debug.Log($"Brick by brick by brick: {i}");
-                    brick.MakePhysical();
-                    brick.Remove(true);
-                    brick.globalPosition.Set(0, 0, 0);
-                    brick.gravityScale = 0;
-                    brick.mass = 99999f;
-                }
-            }
+            
+            //brick.Remove(true);
+            _currentBrick.MakePhysical();
+            _currentBrick.paused = true;
+            _currentBrick.ignoreInHeightCalculations = true;
+            x++;
+            _currentBrick.globalPosition = new Vector3(x, 3);
+            _currentBrick.outOfScreen = false;
+            _currentBrick.gravityScale = 0;
+            _currentBrick.mass = 99999f;
+            _currentBrick.solid = false;
             // Create a new brick using the same resource as the parent
             //BadBrick newBrick = new BadBrick(_parent_bick.resourceId);
             //newBrick.Init();

@@ -2,157 +2,103 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BadAppleGameMode : AbstractSinglePlayerGameMode
+public class BadAppleGameMode : AbstractEndlessGameMode
 {
-    public const float WATER_HEIGHT = -8.5f;
-
-    public int targetBrickCount;
-
-    public float targetHeight;
-
-    public float targetTime;
-
+    private DataModelFloat _pacerSpeedModel;
+    private DataModelFloat _pacerHeightModel;
     private DataModelFloat _targetHeightModel;
 
-    private Dictionary<string, AbstractCondition> _towerHeightModels = new Dictionary<string, AbstractCondition>();
+    private EndlessRaceGameModePlayController _gameModePlayController;
 
-    private DataModelFloat _timeLeftModel;
-
-    private SinglePlayerGameModePlayController _gameModePlayController;
-
-    private BadAppleAnimator _badAppleAnimator = new BadAppleAnimator();
-
+    private readonly BadAppleAnimator _badAppleAnimator = new BadAppleAnimator();
     private float _time = 0;
-
-
-    protected override float _GetWizardXOffset()
-    {
-        return 0;
-    }
-
-    protected override void _AddGameController(AbstractGameController gameController)
-    { 
-        // No enemy wizard
-    }
 
     protected override void _Init()
     {
         base._Init();
-        Shader.SetGlobalFloat("_WaterCutoff", -8.5f);
-        Shader.SetGlobalColor("_WaterColor", ColorUtil.FromHex(2768553u));
-        Shader.SetGlobalColor("_WaterLineColor", ColorUtil.FromHex(12106473u));
-        Shader.EnableKeyword("WATER_ON");
-        _timeLeftModel = new DataModelFloat();
-        _timeLeftModel.value = 99999f;
+        _pacerSpeedModel = new DataModelFloat();
+        _pacerSpeedModel.value = 0.3f;
+        _pacerHeightModel = new DataModelFloat();
+        _pacerHeightModel.value = -5f;
         _targetHeightModel = new DataModelFloat();
-        _targetHeightModel.value = 999f;
         _brickEffectTypesByState = new Dictionary<string, Type[]>();
+        List<Type> list = new List<Type>();
+        list.Add(typeof(BrickClipper));
+        list.Add(typeof(BrickSplash));
+        _brickEffectTypesByState.Add("ROOF", list.ToArray());
+        _brickEffectTypesByState.Add("GAME", list.ToArray());
     }
 
     protected override void _InitStateControllers()
     {
         base._InitStateControllers();
-        AddStateController("EXPLANATION", new GameModeExplanationController(_explanationId, _showControls, "INTRO", skipIntroduction));
+        AddStateController("INTRO", new EndlessRaceGameModeIntroController());
         AddStateController("COUNTDOWN", new RaceGameModeCountDownController(_musicResources));
-        AddStateController("INTRO", new SinglePlayerRaceGameModeIntroController(_targetHeightModel, skipIntroduction));
-        _gameModePlayController = new SinglePlayerRaceGameModePlayController(_highestTowerModel, _lowestTowerModel, _timeModel, _timeLeftModel, _targetHeightModel);
+        _gameModePlayController = new EndlessRaceGameModePlayController(_timeModel, _highestTowerModel, _lowestTowerModel);
         _gameModePlayController.countDownComplete += _HandleCountDownCompleted;
-        _gameModePlayController.countDownAborted += _HandleCountDownAborted;
-        _gameModePlayController.countDownStarted += _HandleCountDownStarted;
         AddStateController("PLAY", _gameModePlayController);
     }
 
     protected override void _Cleanup()
     {
         base._Cleanup();
-        Shader.DisableKeyword("WATER_ON");
         if (_gameModePlayController != null)
         {
             _gameModePlayController.countDownComplete -= _HandleCountDownCompleted;
-            _gameModePlayController.countDownAborted -= _HandleCountDownAborted;
-            _gameModePlayController.countDownStarted -= _HandleCountDownStarted;
         }
+    }
+
+    protected override void _SetCustomGameStateControllers(AbstractGameController gameController)
+    {
+        Dictionary<string, AbstractStateController> dictionary = new Dictionary<string, AbstractStateController>();
+        dictionary.Add("ROOF", new LocalRoofController("ROOF_01", hideHudOnFinish: false));
+        dictionary.Add("BASK", new SinglePlayerLeaderboardBaskController(hideHUDOnFinish: false, playWinStinger: false, "SCORE_HEIGHT"));
+        gameController.customStateControllers = dictionary;
+    }
+
+    protected override TowerPartRemoveChecker _CreateTowerPartRemoveChecker(GameModel gameModel)
+    {
+        return new TowerPartRemoveCheckerSurvival(0f);
     }
 
     protected override void _CreateHud(GameModel gameModel, AbstractGameController gameController, Rect viewPort)
     {
-        AbstractHUD hud = new SinglePlayerRaceHUD(gameModel, viewPort);
-        gameController.SetHud(hud);
+        return;
     }
 
     protected override void _FillGameModel(GameModel gameModel, AbstractGameController gameController)
     {
         base._FillGameModel(gameModel, gameController);
+        DataModelInt dataModelInt = new DataModelInt();
+        dataModelInt.value = (int)_highscore;
+        gameModel.AddDataModel("HIGHSCORE", dataModelInt);
+        gameModel.AddDataModel("SCORE_HEIGHT", new DataModelInt());
+        gameModel.AddDataModel("PACER_SPEED", _pacerSpeedModel);
+        gameModel.AddDataModel("PACER_HEIGHT", _pacerHeightModel);
         gameModel.AddDataModel("TARGET_HEIGHT", _targetHeightModel);
-        //gameModel.AddDataModel("TIME_LEFT", _timeLeftModel);
-        //gameModel.AddDataModel("BRICKS_SPAWNED", new BricksSpawnedModel());
-        TowerHeightModel dataModel = gameModel.GetDataModel<TowerHeightModel>("TOWER_HEIGHT");
-        CompareConditionFloat value = new CompareConditionFloat(dataModel, _targetHeightModel, ComparisonType.GREATER_THAN_OR_EQUAL, ValueDirection.FREE);
-        _towerHeightModels.Add(gameController.id, value);
-        DataModelFloat dataModelFloat = new DataModelFloat();
-        dataModelFloat.value = 0f;
-        CompareConditionFloat endCondition = new CompareConditionFloat(_timeLeftModel, dataModelFloat, ComparisonType.LESS_THAN_OR_EQUAL, ValueDirection.FREE);
-        _SetEndCondition(gameController, endCondition);
     }
 
     protected override string _GetIdByCondition(AbstractCondition condition)
     {
-        foreach (string key in _towerHeightModels.Keys)
+        foreach (string key in _gameEndConditions.Keys)
         {
-            if (_towerHeightModels[key] == condition)
+            if (_gameEndConditions[key] == condition)
             {
                 return key;
             }
         }
 
-        return base._GetIdByCondition(condition);
+        return null;
     }
 
     protected override BrickGuide _CreateBrickGuide(GameModel gameModel)
     {
-        BrickGuide brickGuide = new BrickGuide(new Color(133f / 255f, 59f / 85f, 1f, 0.75f));
+        BrickGuide brickGuide = new BrickGuide(new Color(1f, 83f / 85f, 81f / 85f, 0.5f));
         brickGuide.minBottom = -8.5f;
         return brickGuide;
     }
 
-    protected override void _SetLevelId(string value)
-    {
-        base._SetLevelId(value);
-    }
 
-    protected override void _HandleGameEndConditionSuccess(AbstractCondition condition)
-    {
-        string id = _GetIdByCondition(condition);
-        _OnGameEnd(id);
-        if (Settings.debug.showHudAtEnd)
-        {
-            return;
-        }
-
-        for (int i = 0; i < _backgrounds.Length; i++)
-        {
-            if (_backgrounds[i] is FinishLineSingleBackground)
-            {
-                (_backgrounds[i] as FinishLineSingleBackground).RemovePaceLine();
-            }
-        }
-    }
-
-    protected override void _HandleCountDownCompleted(AbstractGameController gameControler)
-    {
-        if (!Settings.debug.showHudAtEnd)
-        {
-            for (int i = 0; i < _backgrounds.Length; i++)
-            {
-                if (_backgrounds[i] is FinishLineSingleBackground)
-                {
-                    (_backgrounds[i] as FinishLineSingleBackground).RemovePaceLine();
-                }
-            }
-        }
-
-        base._HandleCountDownCompleted(gameControler);
-    }
     protected override void _Update()
     {
         _time += Time.deltaTime;
@@ -166,7 +112,6 @@ public class BadAppleGameMode : AbstractSinglePlayerGameMode
         var singlePlayerController = this._gameControllers.Find(x => x is SinglePlayerLocalGameController);
         if (singlePlayerController != null)
         {
-            //singlePlayerController.DisableBrickSpawning();
             singlePlayerController.Inject(_badAppleAnimator);
             _badAppleAnimator.UpdateAnimation(_time);
         }

@@ -2,37 +2,20 @@
 
 public class BadAppleGameModeFactory : AbstractSinglePlayerGameModeFactory
 {
-    private readonly float _targetHeight;
-    private readonly float _targetTime;
-    public float targetHeight => _targetHeight;
-
-    public BadAppleGameModeFactory(float targetHeight, float targetTime)
+    public BadAppleGameModeFactory()
     {
-        _targetHeight = targetHeight;
-        _targetTime = targetTime;
-        ambientAudio = new string[2] { "AMBIENCE_WATER", "AMBIENCE_BREEZE" }; // TODO: needed?
+        //ambientAudio = new string[2] { "AMBIENCE_WATER", "AMBIENCE_BREEZE" }; // TODO: needed?
         musicAudio = new MusicStruct[1]
         {
-            new MusicStruct("MUSIC_RACE", 1f) // TODO: change to bad apple track
+            new MusicStruct("MUSIC_RACE", 0.9f) // TODO: change to bad apple track
         };
-        backgroundFactory = new BackgroundsFactory(new Type[5]
-        {
-            typeof(RaceBackground),
-            typeof(FinishLineSingleBackground),
-            typeof(WinnerHighlightBackground),
-            typeof(RaceForeground),
-            typeof(LoserHighlightBackground)
-        });
+        
         worldId = 0;
     }
 
     protected override AbstractGameMode _CreateGameMode()
     {
-        BadAppleGameMode singlePlayerRaceGameMode = new BadAppleGameMode
-        {
-            targetHeight = _targetHeight,
-            targetTime = _targetTime
-        };
+        BadAppleGameMode singlePlayerRaceGameMode = new BadAppleGameMode();
         return singlePlayerRaceGameMode;
     }
 }
