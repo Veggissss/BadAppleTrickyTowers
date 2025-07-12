@@ -15,7 +15,7 @@ class AddNewRaceAndNewModesPatch
         List<SelectModel> challenges = new List<SelectModel>(); //GetAllOldChallenges()
 
         BadAppleGameModeFactory badAppleGameModeFactory = new BadAppleGameModeFactory();
-        badAppleGameModeFactory.brickPickerFactory = new RandomNamedBrickPickerFactory(new string[1] { "BRICK_O" });
+        badAppleGameModeFactory.brickPickerFactory = new RandomNamedBrickPickerFactory(new string[1] { "BRICK_O" }); //new string[5] { "BRICK_Z", "BRICK_T", "BRICK_S", "BRICK_L", "BRICK_J" }
         badAppleGameModeFactory.wizardInvinceable = true;
         //InitGameTypesAndModesCommand //"RACE", "LBRW", "Race Leaderboard World"
         //badAppleGameModeFactory.floorFactory = new FloorFactory("FLOOR_RACE_ENDLESS", 12.5f);

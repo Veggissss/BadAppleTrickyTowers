@@ -9,12 +9,14 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
         public Vector2 Position;
         public Vector2 ShapeOffset;
         public List<Vector2> Shape;
+        public Quaternion Rotation;
 
-        public PlacedTetromino(Tetromino tetromino, Vector2 position, List<Vector2> shape)
+        public PlacedTetromino(Tetromino tetromino, Vector2 position, List<Vector2> shape, Quaternion rotation)
         {
             Tetromino = tetromino;
             Position = position;
             Shape = shape;
+            Rotation = rotation;
         }
     }
 }

@@ -97,6 +97,7 @@
     <Compile Include="Injectors\RegisterNewResourcesPatch.cs" />
     <Compile Include="Injectors\RegisterNewSoundsPatch.cs" />
     <Compile Include="TetrisPlayer\FrameExtractor.cs" />
+    <Compile Include="TetrisPlayer\PlacedTetromino.cs" />
     <Compile Include="TetrisPlayer\TetrominoFactory.cs" />
     <Compile Include="TetrisPlayer\Tetromino.cs" />
     <Compile Include="TetrisPlayer\TetrominoFiller.cs" />

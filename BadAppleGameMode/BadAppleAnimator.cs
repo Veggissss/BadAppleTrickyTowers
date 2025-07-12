@@ -4,9 +4,10 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Experimental.Director;
 
-public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControllerInjectable, IBrickInjectable
+public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControllerInjectable, IBrickInjectable, IZoomableCameraInjectable
 {
     private Tower _tower;
+    private ZoomableCamera _zoomableCamera;
 
     private float _animationTime;
     private Brick _parentBrick;
@@ -81,6 +82,10 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         {
             return;
         }
+        if (_zoomableCamera != null)
+        {
+            _zoomableCamera.SetVerticalBounds(90f,-10f);
+        }
         // Wait between each finish frame so when sped up it is smoother.
         if (_loadNextFrame)
         {
@@ -125,7 +130,8 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         if (placed != null)
         {
             //Debug.Log($"Placed brick {_currentBrick.resourceId} @ {placed.Position}");
-            _currentBrick.globalPosition = new Vector3(placed.Position.x-20, placed.Position.y-5);
+            _currentBrick.globalPosition = new Vector3(placed.Position.x-60, placed.Position.y-5);
+            _currentBrick.rotation = placed.Rotation;
         }
         else
         {
@@ -134,5 +140,10 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
             _loadNextFrame = true;
         }
         
+    }
+
+    public void SetZoomableCamera(ZoomableCamera zoomableCamera)
+    {
+        _zoomableCamera = zoomableCamera;
     }
 }

@@ -15,8 +15,8 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
                 Debug.Log($"File {path} does not excist");
                 return null;
             }
-            // Make 10x smaller than original // 480x360
-            Texture2D texture = LoadAndResizeImage(path, 40, 30);
+            // Make 5x smaller than original // 480x360
+            Texture2D texture = LoadAndResizeImage(path, 120, 90);
 
             return ConvertToBoolFrame(texture, threshold);
         }

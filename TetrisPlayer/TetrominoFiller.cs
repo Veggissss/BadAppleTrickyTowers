@@ -24,8 +24,11 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
             int width = frame.GetLength(0);
             int height = frame.GetLength(1);
 
+            int i = 0;
             foreach (var shape in brick.GetRotations())
             {
+                Quaternion rotationQuat = Quaternion.Euler(0, 0, -90f * i);
+                i++;
                 foreach (var anchorCell in shape)
                 {
                     for (int y = 0; y < height; y++)
@@ -33,14 +36,14 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
                         for (int x = 0; x < width; x++)
                         {
                             Vector2 anchorPos = new Vector2(x, y);
-                            Vector2 offset = anchorPos - new Vector2(Mathf.RoundToInt(anchorCell.x), Mathf.RoundToInt(anchorCell.y));
+                            Vector2 pos = anchorPos - new Vector2(Mathf.RoundToInt(anchorCell.x), Mathf.RoundToInt(anchorCell.y));
 
-                            if (CanPlaceOnFrame(shape, offset))
+                            if (CanPlaceOnFrame(shape, pos))
                             {
                                 Tetromino placed = new Tetromino(brick.ResourceId, shape, brick.Offset);
-                                grid.PlaceBrick(placed, offset);
+                                grid.PlaceBrick(placed, pos);
 
-                                var placedInfo = new PlacedTetromino(placed, offset, shape);
+                                var placedInfo = new PlacedTetromino(placed, pos, shape, rotationQuat);
                                 PlacedBricks.Add(placedInfo);
 
                                 return placedInfo;
