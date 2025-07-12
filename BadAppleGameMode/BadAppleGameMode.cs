@@ -7,6 +7,7 @@ public class BadAppleGameMode : AbstractEndlessGameMode
     private DataModelFloat _pacerSpeedModel;
     private DataModelFloat _pacerHeightModel;
     private DataModelFloat _targetHeightModel;
+    private TowerHeightModel _towerHeightModel;
 
     private EndlessRaceGameModePlayController _gameModePlayController;
 
@@ -17,10 +18,12 @@ public class BadAppleGameMode : AbstractEndlessGameMode
     {
         base._Init();
         _pacerSpeedModel = new DataModelFloat();
-        _pacerSpeedModel.value = 0.3f;
+        _pacerSpeedModel.value = 10000000f;
         _pacerHeightModel = new DataModelFloat();
-        _pacerHeightModel.value = -5f;
+        _pacerHeightModel.value = -500000f;
         _targetHeightModel = new DataModelFloat();
+        _targetHeightModel.value = 999900f;
+
         _brickEffectTypesByState = new Dictionary<string, Type[]>();
         List<Type> list = new List<Type>();
         list.Add(typeof(BrickClipper));
@@ -50,6 +53,7 @@ public class BadAppleGameMode : AbstractEndlessGameMode
 
     protected override void _SetCustomGameStateControllers(AbstractGameController gameController)
     {
+        return;
         Dictionary<string, AbstractStateController> dictionary = new Dictionary<string, AbstractStateController>();
         dictionary.Add("ROOF", new LocalRoofController("ROOF_01", hideHudOnFinish: false));
         dictionary.Add("BASK", new SinglePlayerLeaderboardBaskController(hideHUDOnFinish: false, playWinStinger: false, "SCORE_HEIGHT"));
@@ -76,6 +80,15 @@ public class BadAppleGameMode : AbstractEndlessGameMode
         gameModel.AddDataModel("PACER_SPEED", _pacerSpeedModel);
         gameModel.AddDataModel("PACER_HEIGHT", _pacerHeightModel);
         gameModel.AddDataModel("TARGET_HEIGHT", _targetHeightModel);
+        if (gameModel.ContainsDataModel("TOWER_HEIGHT"))
+        {
+            _towerHeightModel = gameModel.GetDataModel<TowerHeightModel>("TOWER_HEIGHT");
+            _towerHeightModel.value = 0;
+        }
+        else
+        {
+            Debug.LogError("Could not find datamodel TOWER_HEIGHT!");
+        }
     }
 
     protected override string _GetIdByCondition(AbstractCondition condition)
@@ -102,6 +115,9 @@ public class BadAppleGameMode : AbstractEndlessGameMode
     protected override void _Update()
     {
         _time += Time.deltaTime;
+
+        // Set camera to be at the bottom
+        _towerHeightModel.value = 0;
 
         var enemyController = this._gameControllers.Find(x => x is EnemyGameController);
         if (enemyController != null)

@@ -15,14 +15,15 @@ class AddNewRaceAndNewModesPatch
         List<SelectModel> challenges = new List<SelectModel>(); //GetAllOldChallenges()
 
         BadAppleGameModeFactory badAppleGameModeFactory = new BadAppleGameModeFactory();
-        //badAppleGameModeFactory.brickPickerFactory = new RandomNamedBrickPickerFactory();
+        badAppleGameModeFactory.brickPickerFactory = new RandomNamedBrickPickerFactory(new string[1] { "BRICK_O" });
+        badAppleGameModeFactory.wizardInvinceable = true;
         //InitGameTypesAndModesCommand //"RACE", "LBRW", "Race Leaderboard World"
         //badAppleGameModeFactory.floorFactory = new FloorFactory("FLOOR_RACE_ENDLESS", 12.5f);
 
-        challenges.Add(new BadAppleGameModeModel("RACE", "Single Player", badAppleGameModeFactory, "SINGLE_PLAYER_RACE_01"));
+        challenges.Add(new BadAppleGameModeModel("SR_10", "Single Player", badAppleGameModeFactory));
 
         // Add new bad apple mode and old modes as well
-        singlePlayerWorldsRef(__instance).Add(new WorldModel("RACE", "LBRW", "BAD_APPLE", challenges));
+        singlePlayerWorldsRef(__instance).Add(new WorldModel("SR_10", "LBRW", "BAD_APPLE", challenges));
 
         return false;
     }

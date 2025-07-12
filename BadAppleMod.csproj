@@ -30,6 +30,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>D:\SteamLibrary\steamapps\common\Tricky Towers\BepInEx\core\0Harmony.dll</HintPath>
@@ -90,10 +93,14 @@
     <Compile Include="BadAppleGameMode\BadAppleGameMode.cs" />
     <Compile Include="BadAppleGameMode\BadAppleGameModeFactory.cs" />
     <Compile Include="Injectors\AddGameModesPatch.cs" />
-    <Compile Include="Injectors\GameModeIndexPatch.cs" />
     <Compile Include="Injectors\HarmonySetup.cs" />
     <Compile Include="Injectors\RegisterNewResourcesPatch.cs" />
     <Compile Include="Injectors\RegisterNewSoundsPatch.cs" />
+    <Compile Include="TetrisPlayer\FrameExtractor.cs" />
+    <Compile Include="TetrisPlayer\TetrominoFactory.cs" />
+    <Compile Include="TetrisPlayer\Tetromino.cs" />
+    <Compile Include="TetrisPlayer\TetrominoFiller.cs" />
+    <Compile Include="TetrisPlayer\TetrominoGrid.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
