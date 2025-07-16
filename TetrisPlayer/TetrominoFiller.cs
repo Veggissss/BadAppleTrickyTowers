@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace BadAppleTrickyTowersMod.TetrisPlayer
@@ -9,21 +10,21 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
         private bool[,] frame;
 
         public List<PlacedTetromino> PlacedBricks { get; private set; } = new List<PlacedTetromino>();
-
-        public TetrominoFiller(bool[,] inputFrame)
+     
+        public void SetFrame(bool[,] inputFrame)
         {
             int width = inputFrame.GetLength(0);
             int height = inputFrame.GetLength(1);
+            grid = new TetrominoGrid(width, height);
 
             frame = inputFrame;
-            grid = new TetrominoGrid(width, height);
         }
 
-        public PlacedTetromino TryPlaceBrick(Tetromino brick)
+        public PlacedTetromino FillInitialFrame(Tetromino brick)
         {
             int width = frame.GetLength(0);
             int height = frame.GetLength(1);
-
+         
             int i = 0;
             foreach (var shape in brick.GetRotations())
             {
@@ -36,7 +37,7 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
                         for (int x = 0; x < width; x++)
                         {
                             Vector2 anchorPos = new Vector2(x, y);
-                            Vector2 pos = anchorPos - new Vector2(Mathf.RoundToInt(anchorCell.x), Mathf.RoundToInt(anchorCell.y));
+                            Vector2 pos = anchorPos - new Vector2(anchorCell.x, anchorCell.y);
 
                             if (CanPlaceOnFrame(shape, pos))
                             {
@@ -52,8 +53,8 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
                     }
                 }
             }
-
-            return null; // Could not place
+            // Could not place brick
+            return null; 
         }
 
         private bool CanPlaceOnFrame(List<Vector2> shape, Vector2 offset)
@@ -61,14 +62,33 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
             foreach (var cell in shape)
             {
                 Vector2 p = offset + new Vector2(Mathf.RoundToInt(cell.x), Mathf.RoundToInt(cell.y));
-                if (!grid.IsInside(p) || !grid.IsCellEmpty(p) || frame[(int)p.x, (int)p.y] == false)
+                if (!grid.IsInside(p) || !grid.IsCellEmpty(p))
+                {
                     return false;
+                }
             }
             return true;
         }
 
-        public TetrominoGrid GetFilledGrid() => grid;
+        public void ApplyFrame(bool[,] frame)
+        {
+            HashSet<Vector2> targetPixels = new HashSet<Vector2>();
+            for (int x = 0; x < frame.GetLength(0); x++)
+            {
+                for (int y = 0; y < frame.GetLength(1); y++)
+                {
+                    if (frame[x, y])
+                    {
+                        targetPixels.Add(new Vector2(x, y));
+                    }
+                }
+            }
 
-        public TetrominoGrid GetFrameGrid() => new TetrominoGrid(grid.Width, grid.Height, frame);
+            foreach (var brick in PlacedBricks)
+            {
+                bool shouldBeVisible = brick.CoveredCells().Any(c => targetPixels.Contains(c));
+                brick.Visible = shouldBeVisible;
+            }
+        }
     }
 }

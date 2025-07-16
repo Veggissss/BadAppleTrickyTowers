@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace BadAppleTrickyTowersMod.TetrisPlayer
@@ -7,18 +6,22 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
    
     public static class FrameExtractor
     {
-        public static bool[,] LoadFramesFromFolder(string folderPath, int frameCount, float threshold = 0.5f)
+        public static bool[,] LoadFrameFromFolder(string folderPath, int frameCount, float threshold = 0.5f)
         {
             string path = $"{folderPath}{frameCount}.jpg";
             if (!File.Exists(path))
             {
-                Debug.Log($"File {path} does not excist");
+                Debug.Log($"File {path} does not exist");
                 return null;
             }
-            // Make 5x smaller than original // 480x360
-            Texture2D texture = LoadAndResizeImage(path, 120, 90);
 
-            return ConvertToBoolFrame(texture, threshold);
+            Texture2D texture = LoadAndResizeImage(path, 120, 90);
+            bool[,] result = ConvertToBoolFrame(texture, threshold);
+
+            // Cleanup to prevent out of memory...
+            Object.Destroy(texture);
+
+            return result;
         }
 
         private static Texture2D LoadAndResizeImage(string path, int targetWidth, int targetHeight)
@@ -31,12 +34,15 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
             RenderTexture.active = rt;
             Graphics.Blit(original, rt);
 
-            Texture2D resized = new Texture2D(targetWidth, targetHeight);
+            Texture2D resized = new Texture2D(targetWidth, targetHeight, TextureFormat.RGB24, false);
             resized.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
             resized.Apply();
 
+            // Cleanup
             RenderTexture.active = null;
             rt.Release();
+            Object.Destroy(rt);
+            Object.Destroy(original);
 
             return resized;
         }

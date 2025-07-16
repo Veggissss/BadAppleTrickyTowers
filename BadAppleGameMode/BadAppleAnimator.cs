@@ -2,39 +2,51 @@
 using System;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Experimental.Director;
 
 public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControllerInjectable, IBrickInjectable, IZoomableCameraInjectable
 {
     private Tower _tower;
     private ZoomableCamera _zoomableCamera;
 
-    private float _animationTime;
-    private Brick _parentBrick;
     private Brick _currentBrick;
     private LocalGamePlayController _gamePlayController;
+
+    private readonly string _frameFolderPath;
     private bool[,] _currentFrame;
     private int _currentFrameCount;
-    private string _frameFolderPath;
-    private TetrominoFiller _tetrominoFiller;
-    private bool _loadNextFrame;
+
+    private readonly TetrominoFiller _tetrominoFiller;
+    private bool _finishedBrickSpawning;
+    private bool _hasFinished;
+
+    private Brick _firstPlacedBrick;
 
     public BadAppleAnimator()
     {
         _frameFolderPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), "BepInEx/plugins/BadAppleMod/frames/");
+        _tetrominoFiller = new TetrominoFiller();
+
         _currentFrameCount = 0;
+        _finishedBrickSpawning = false;
+        _hasFinished = false;
+        _firstPlacedBrick = null;
+
         LoadNextFrame();
-        _loadNextFrame = false;
     }
 
     private void LoadNextFrame()
     {
-        ClearBricks();
         _currentFrameCount++;
-        _currentFrame = FrameExtractor.LoadFramesFromFolder(_frameFolderPath, _currentFrameCount);
-        _tetrominoFiller = new TetrominoFiller(_currentFrame);
+        _currentFrame = FrameExtractor.LoadFrameFromFolder(_frameFolderPath, _currentFrameCount);
+        if (_currentFrame == null)
+        {
+            _currentFrameCount--;
+            _hasFinished = true;
+            return;
+        }
+        _tetrominoFiller.SetFrame(_currentFrame); 
+
         Debug.Log($"Loading next frame {_currentFrameCount}");
-        //_tetrominoFiller.GetFrameGrid().PrintToConsole();
     }
 
     private void ClearBricks()
@@ -45,11 +57,9 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         }
         foreach (TowerPart tp in _tower.towerParts)
         {
-            //_tower.RemoveTowerPartInNextUpdate(tp, false);
             if (tp is Brick brick)
             {
                 brick.Remove(false);
-                brick.Die();
             }
         }
     }
@@ -82,33 +92,54 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         {
             return;
         }
-        if (_zoomableCamera != null)
+        if (_hasFinished)
         {
-            _zoomableCamera.SetVerticalBounds(90f,-10f);
-        }
-        // Wait between each finish frame so when sped up it is smoother.
-        if (_loadNextFrame)
-        {
-            if (time - _animationTime >= 5)
-            {
-                _loadNextFrame = false;
-                LoadNextFrame();
-            }
-            else
-            {
-                // Wait for frame hold
-                return;
-            }
+            ClearBricks();
+            return;
         }
 
-        // Wait for first block placement.
         if (_tower.GetLastBrick() == null)
         {
             return;
         }
-        else if (_parentBrick == null)
+        else if (_firstPlacedBrick == null)
         {
-            _parentBrick = _tower.GetLastBrick();
+            _firstPlacedBrick = _tower.GetLastBrick();
+            _firstPlacedBrick.gameObject.SetActive(false);
+        }
+
+        // Zoom to fit the frame bricks
+        if (_zoomableCamera != null)
+        {
+            _zoomableCamera.SetVerticalBounds(86f,-8f);
+        }
+    
+        // Spawn grid with bricks
+        if (!_finishedBrickSpawning)
+        {
+            FillGrid();
+        }
+        else
+        {
+            // Disable bricks for next frame
+            _gamePlayController.DisableBrickSpawning();
+
+            // See what placedTetrominos should be visible
+            LoadNextFrame();
+            _tetrominoFiller.ApplyFrame(_currentFrame);
+
+            foreach (PlacedTetromino placed in _tetrominoFiller.PlacedBricks)
+            {
+                UpdatePlacedBrickPosition(placed);
+            }
+        }
+    }
+
+    private void FillGrid()
+    {
+        if (_gamePlayController == null)
+        {
+            return;
         }
         _gamePlayController.SpawnBrick();
         _tower.StopPhysics();
@@ -116,31 +147,44 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         // Get the new currentBrick available.
         _gamePlayController.Inject(this);
         _tower.AddTowerPart(_currentBrick);
-            
-        // Set brick properties
+
+        // Set brick to be non-interactable
         _currentBrick.paused = true;
-        _currentBrick.ignoreInHeightCalculations = true;
-        _currentBrick.outOfScreen = false;
         _currentBrick.solid = false;
         _currentBrick.gravityScale = 0;
+        _currentBrick.ignoreInHeightCalculations = true;
+        _currentBrick.outOfScreen = false;
 
-        // One brick at a time (e.g. you get this from a queue)
+        // One brick placed at a time
         Tetromino brick = TetrominoFactory.Create(_currentBrick.resourceId);
-        PlacedTetromino placed = _tetrominoFiller.TryPlaceBrick(brick);
+        PlacedTetromino placed = _tetrominoFiller.FillInitialFrame(brick);
         if (placed != null)
         {
-            //Debug.Log($"Placed brick {_currentBrick.resourceId} @ {placed.Position}");
-            _currentBrick.globalPosition = new Vector3(placed.Position.x-60, placed.Position.y-5);
-            _currentBrick.rotation = placed.Rotation;
+            // Bind placed to real brick instance
+            placed.brickInstance = _currentBrick;
+            UpdatePlacedBrickPosition(placed);
         }
         else
         {
-            //Debug.Log($"Brick {brick.ResourceId} could not be placed.");
-            _animationTime = time;
-            _loadNextFrame = true;
+            _currentBrick.gameObject.SetActive(false);
+            _finishedBrickSpawning = true;
         }
-        
     }
+
+    private void UpdatePlacedBrickPosition(PlacedTetromino placed)
+    {
+        placed.brickInstance.rotation = placed.Rotation;
+        if (placed.Visible)
+        {
+            placed.brickInstance.gameObject.SetActive(true);
+            placed.brickInstance.globalPosition = new Vector3(placed.Position.x - 60, placed.Position.y - 5);
+        }
+        else
+        {
+            placed.brickInstance.gameObject.SetActive(false);
+        }
+    }
+
 
     public void SetZoomableCamera(ZoomableCamera zoomableCamera)
     {
