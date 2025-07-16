@@ -1,0 +1,22 @@
+ManifestFileVersion: 0
+CRC: 60417370
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 09eb346433dc1d31ce483ec0edbe1ed3
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: ee73c1242a5d172c2ed98252b53df583
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 82
+  Script: {instanceID: 0}
+- Class: 83
+  Script: {instanceID: 0}
+Assets:
+- Assets/music/BadAppleSong.prefab
+Dependencies: []
