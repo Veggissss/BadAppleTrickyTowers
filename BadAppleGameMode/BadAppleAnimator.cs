@@ -8,6 +8,8 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
     private Tower _tower;
     private ZoomableCamera _zoomableCamera;
 
+    private float _lastFrameTime = 0;
+
     private Brick _currentBrick;
     private LocalGamePlayController _gamePlayController;
 
@@ -30,8 +32,6 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         _finishedBrickSpawning = false;
         _hasFinished = false;
         _firstPlacedBrick = null;
-
-        LoadNextFrame();
     }
 
     private void LoadNextFrame()
@@ -62,28 +62,6 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
                 brick.Remove(false);
             }
         }
-    }
-
-    public void SetBrick(Brick brick)
-    {
-        _currentBrick = brick;
-    }
-
-    public void SetGamePlayController(AbstractGamePlayController gamePlayController)
-    {
-        if (gamePlayController is LocalGamePlayController)
-        {
-            _gamePlayController = (LocalGamePlayController) gamePlayController;
-        }
-        else
-        {
-            throw new Exception("Not a LocalGamePlay controller.");
-        }
-    }
-
-    public void SetTower(Tower tower)
-    {
-        _tower = tower;
     }
 
     public void UpdateAnimation(float time)
@@ -121,13 +99,20 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         }
         else
         {
-            // Disable bricks for next frame
+            // Disable bricks spawning
             _gamePlayController.DisableBrickSpawning();
 
-            // See what placedTetrominos should be visible
-            LoadNextFrame();
-            _tetrominoFiller.ApplyFrame(_currentFrame);
+            // Match animation with 30fps
+            float delay = 1f / 30f;
+            if (time - _lastFrameTime > delay)
+            {
+                _lastFrameTime = time;
+            }
 
+            LoadNextFrame();
+
+            // Find out which bricks should be visible
+            _tetrominoFiller.ApplyFrame(_currentFrame);
             foreach (PlacedTetromino placed in _tetrominoFiller.PlacedBricks)
             {
                 UpdatePlacedBrickPosition(placed);
@@ -157,6 +142,11 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
 
         // One brick placed at a time
         Tetromino brick = TetrominoFactory.Create(_currentBrick.resourceId);
+        if (_currentFrame == null)
+        {
+            // Load first frame to get width and height
+            LoadNextFrame();
+        }
         PlacedTetromino placed = _tetrominoFiller.FillInitialFrame(brick);
         if (placed != null)
         {
@@ -183,6 +173,28 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         {
             placed.brickInstance.gameObject.SetActive(false);
         }
+    }
+
+    public void SetGamePlayController(AbstractGamePlayController gamePlayController)
+    {
+        if (gamePlayController is LocalGamePlayController)
+        {
+            _gamePlayController = (LocalGamePlayController)gamePlayController;
+        }
+        else
+        {
+            throw new Exception("Not a LocalGamePlay controller.");
+        }
+    }
+
+    public void SetBrick(Brick brick)
+    {
+        _currentBrick = brick;
+    }
+
+    public void SetTower(Tower tower)
+    {
+        _tower = tower;
     }
 
 

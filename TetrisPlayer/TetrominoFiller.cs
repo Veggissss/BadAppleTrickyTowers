@@ -7,7 +7,7 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
     public class TetrominoFiller
     {
         private TetrominoGrid grid;
-        private bool[,] frame;
+        private bool[,] frame = null;
 
         public List<PlacedTetromino> PlacedBricks { get; private set; } = new List<PlacedTetromino>();
      
@@ -22,6 +22,10 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
 
         public PlacedTetromino FillInitialFrame(Tetromino brick)
         {
+            if (frame == null)
+            {
+                throw new System.Exception("Initial frame is not set.");
+            }
             int width = frame.GetLength(0);
             int height = frame.GetLength(1);
          
