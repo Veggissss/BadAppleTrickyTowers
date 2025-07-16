@@ -8,7 +8,7 @@ namespace TrickyMultiplayerPlus
 	{
 		static bool Prefix(InitResourcesCommand __instance)
 		{
-			//Singleton<ResourceManager>.instance.RegisterResource("TALLEST_SFX_START_STINGER", "Audio/Music/000_Track_01_Race_stinger", false);
+			Singleton<ResourceManager>.instance.RegisterResource("MUSIC_BAD_APPLE", "Audio/Music/000_Track_01_Race_stinger", false);
 			return true;
 		}
 	}
