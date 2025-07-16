@@ -16,7 +16,7 @@ See [LICENSES/](`LICENSES/`) for MIT license details.
 
 ## Demo Video
 
-[![Demo video](https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg)](https://youtu.be/dQw4w9WgXcQ)
+[![Demo video](https://img.youtube.com/vi/BvXCpEuPhxQ/maxresdefault.jpg)](https://youtu.be/BvXCpEuPhxQ?feature=shared&t=46)
 
 ## Installation
 To Install, unzip a [mod release](https://github.com/Veggissss/BadAppleTrickyTowers/releases) zip into your tricky towers install location so the BepInEx folder is alongside the TrickyTowers.exe file.
