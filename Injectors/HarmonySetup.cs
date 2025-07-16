@@ -4,7 +4,7 @@ using HarmonyLib;
 namespace TrickyMultiplayerPlus
 {
 
-    [BepInPlugin("badapple", "BadApple", "0.1")]
+    [BepInPlugin("badapple", "BadApple", "1.0")]
 	public class TrickyTowersModPlugin : BaseUnityPlugin
 	{
 		void Awake()
