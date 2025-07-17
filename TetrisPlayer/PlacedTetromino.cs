@@ -7,9 +7,9 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
     {
         public Tetromino Tetromino;
         public Vector2 Position;
-        public Vector2 ShapeOffset;
         public List<Vector2> Shape;
         public Quaternion Rotation;
+
         public Brick brickInstance;
         public bool Visible = true;
 

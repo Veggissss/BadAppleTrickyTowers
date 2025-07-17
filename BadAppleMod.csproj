@@ -94,7 +94,6 @@
     <Compile Include="BadAppleGameMode\BadAppleGameModeFactory.cs" />
     <Compile Include="Injectors\AddGameModesPatch.cs" />
     <Compile Include="Injectors\HarmonySetup.cs" />
-    <Compile Include="Injectors\RegisterNewResourcesPatch.cs" />
     <Compile Include="Injectors\RegisterNewSoundsPatch.cs" />
     <Compile Include="Injectors\RegisterNewStringsPatch.cs" />
     <Compile Include="Injectors\ResourceManagerSubstitutionsPatch.cs" />

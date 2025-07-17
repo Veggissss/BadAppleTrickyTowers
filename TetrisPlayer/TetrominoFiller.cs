@@ -28,7 +28,7 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
             }
             int width = frame.GetLength(0);
             int height = frame.GetLength(1);
-         
+
             int i = 0;
             foreach (var shape in brick.GetRotations())
             {
@@ -52,10 +52,10 @@ namespace BadAppleTrickyTowersMod.TetrisPlayer
                                 PlacedBricks.Add(placedInfo);
 
                                 return placedInfo;
-                            }
                         }
                     }
                 }
+            }
             }
             // Could not place brick
             return null; 

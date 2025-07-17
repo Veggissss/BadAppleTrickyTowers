@@ -9,7 +9,7 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
     private ZoomableCamera _zoomableCamera;
 
     private const float FrameInterval = 1f / 30f;
-    private float _accumulator = 0f;
+    private float _frameTimeAccumulator = 0f;
 
     private Brick _currentBrick;
     private LocalGamePlayController _gamePlayController;
@@ -29,7 +29,6 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         _frameFolderPath = Path.Combine(Path.GetDirectoryName(Application.dataPath), "BepInEx/plugins/BadAppleMod/frames/");
         _tetrominoFiller = new TetrominoFiller();
 
-        // Match the animation and music
         _currentFrameCount = 0;
         _finishedBrickSpawning = false;
         _hasFinished = false;
@@ -47,7 +46,6 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
             return;
         }
         _tetrominoFiller.SetFrame(_currentFrame); 
-        //Debug.Log($"Loading next frame {_currentFrameCount}");
     }
 
     private void ClearBricks()
@@ -104,15 +102,12 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         {
             // Revert audio back
             MonoBehaviourSingleton<AudioManager>.instance.sfxUserVolume = 1f;
-            
-            // Disable bricks spawning
-            _gamePlayController.DisableBrickSpawning();
 
             // Match animation with 30fps
-            _accumulator += Time.deltaTime;
-            while (_accumulator >= FrameInterval)
+            _frameTimeAccumulator += Time.deltaTime;
+            while (_frameTimeAccumulator >= FrameInterval)
             {
-                _accumulator -= FrameInterval;
+                _frameTimeAccumulator -= FrameInterval;
 
                 // Load next frame as _currentFrame
                 LoadNextFrame();
@@ -134,7 +129,6 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
             return;
         }
         _gamePlayController.SpawnBrick();
-        _tower.StopPhysics();
 
         // Get the new currentBrick available.
         _gamePlayController.Inject(this);
@@ -142,7 +136,7 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
 
         // Set brick to be non-interactable
         _currentBrick.paused = true;
-        _currentBrick.solid = false;
+        _currentBrick.solid = true;
         _currentBrick.gravityScale = 0;
         _currentBrick.ignoreInHeightCalculations = true;
         _currentBrick.outOfScreen = false;
@@ -166,6 +160,9 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
             _currentBrick.gameObject.SetActive(false);
             _finishedBrickSpawning = true;
 
+            // Disable bricks spawning
+            _gamePlayController.DisableBrickSpawning();
+
             // Play song, will be substituted during call
             MonoBehaviourSingleton<AudioManager>.instance.PlayMusic("MUSIC_BAD_APPLE", 0f, "MUSIC", 0f, false);
         }
@@ -177,7 +174,7 @@ public class BadAppleAnimator : IInjectable, ITowerInjectable, IGamePlayControll
         if (placed.Visible)
         {
             placed.brickInstance.gameObject.SetActive(true);
-            placed.brickInstance.globalPosition = new Vector3(placed.Position.x - 60, placed.Position.y - 5);
+            placed.brickInstance.globalPosition = new Vector3(placed.Position.x + placed.Tetromino.Offset.x - 60, placed.Position.y + placed.Tetromino.Offset.y - 5);
         }
         else
         {
